@@ -8,7 +8,7 @@ import com.cloudrive.common.util.PasswordUtil;
 import com.cloudrive.mapper.UserMapper;
 import com.cloudrive.model.dto.LoginDTO;
 import com.cloudrive.model.dto.RegisterDTO;
-import com.cloudrive.model.entity.User;
+import com.cloudrive.model.entity.UserEntity;
 import com.cloudrive.redis.VerificationCodeRedis;
 import com.cloudrive.service.UserService;
 import com.cloudrive.common.util.EmailUtil;
@@ -20,8 +20,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.Random;
 
 /**
@@ -42,7 +40,7 @@ public class UserServiceImpl implements UserService {
     public void sendVerificationCode(String email) {
         // 检查邮箱是否已被注册
         boolean exists = userMapper.exists(
-                new LambdaQueryWrapper<User>().eq(User::getEmail, email)
+                new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getEmail, email)
         );
         ExceptionUtil.throwIf(exists, ErrorCode.EMAIL_ALREADY_EXIST);
 
@@ -69,13 +67,13 @@ public class UserServiceImpl implements UserService {
     public void register(RegisterDTO registerDTO) {
         // 检查用户名是否已存在
         boolean usernameExists = userMapper.exists(
-                new LambdaQueryWrapper<User>().eq(User::getUsername, registerDTO.getUsername())
+                new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getUsername, registerDTO.getUsername())
         );
         ExceptionUtil.throwIf(usernameExists, ErrorCode.USERNAME_EXISTS);
 
         // 检查邮箱是否已存在
         boolean emailExists = userMapper.exists(
-                new LambdaQueryWrapper<User>().eq(User::getEmail, registerDTO.getEmail())
+                new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getEmail, registerDTO.getEmail())
         );
         ExceptionUtil.throwIf(emailExists, ErrorCode.EMAIL_EXISTS);
 
@@ -87,7 +85,7 @@ public class UserServiceImpl implements UserService {
         );
 
         // 创建新用户
-        User user = new User();
+        UserEntity user = new UserEntity();
         user.setUsername(registerDTO.getUsername());
         user.setPassword(PasswordUtil.encode(registerDTO.getPassword()));
         user.setEmail(registerDTO.getEmail());
@@ -105,8 +103,8 @@ public class UserServiceImpl implements UserService {
     public String login(LoginDTO loginDTO) {
         logger.info("开始处理登录请求，用户名：{}", loginDTO.getUsername());
 
-        User user = userMapper.selectOne(
-                new LambdaQueryWrapper<User>().eq(User::getUsername, loginDTO.getUsername())
+        UserEntity user = userMapper.selectOne(
+                new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getUsername, loginDTO.getUsername())
         );
         if (user == null) {
             logger.warn("登录失败：用户名不存在，用户名：{}", loginDTO.getUsername());

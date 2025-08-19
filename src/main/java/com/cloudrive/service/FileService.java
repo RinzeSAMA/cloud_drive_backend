@@ -1,32 +1,23 @@
 package com.cloudrive.service;
 
+import com.cloudrive.common.result.Result;
+import com.cloudrive.model.common.FileUploadInfo;
 import com.cloudrive.model.dto.FileQueryDTO;
 import com.cloudrive.model.vo.FileListVO;
 import com.cloudrive.model.vo.FileListPageVO;
+import com.cloudrive.model.vo.UploadUrlsVO;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
  * 文件服务接口
  */
 public interface FileService {
-    /**
-     * 上传文件
-     */
-    String uploadFile(MultipartFile file, Long parentId);
-
-    /**
-     * 从文件路径上传文件并跟踪进度（用于异步上传）
-     *
-     * @param filePath         文件路径
-     * @param originalFilename 原始文件名
-     * @param fileSize         文件大小
-     * @param parentId         父文件夹ID
-     * @param taskId           任务ID，用于跟踪进度
-     * @param userId           用户ID，用于在异步线程中获取用户信息
-     */
-    void uploadFileWithProgressFromPath(String filePath, String originalFilename, long fileSize, Long parentId, String taskId, Long userId);
 
     /**
      * 下载文件
@@ -78,4 +69,11 @@ public interface FileService {
     FileListPageVO getRecycleListFiles(FileQueryDTO queryDTO);
 
 
+    Result<FileUploadInfo> checkFileByMd5(String md5);
+
+    Result<UploadUrlsVO> initMultipartUpload(FileUploadInfo fileUploadInfo);
+
+    Result<String> mergeMultipartUpload(String md5,Long parentId);
+
+    ResponseEntity<byte[]> downloadMultipartFile(Long id, HttpServletRequest request, HttpServletResponse response) throws IOException;
 }

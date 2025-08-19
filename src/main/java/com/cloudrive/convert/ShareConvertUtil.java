@@ -1,8 +1,8 @@
 package com.cloudrive.convert;
 
-import com.cloudrive.model.entity.FileInfo;
-import com.cloudrive.model.entity.ShareRecord;
-import com.cloudrive.model.entity.User;
+import com.cloudrive.model.entity.FileInfoEntity;
+import com.cloudrive.model.entity.ShareRecordEntity;
+import com.cloudrive.model.entity.UserEntity;
 import com.cloudrive.model.vo.ShareFileVO;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Component
 public class ShareConvertUtil {
-    public static ShareFileVO toShareFileVO(ShareRecord shareRecord) {
+    public static ShareFileVO toShareFileVO(ShareRecordEntity shareRecord) {
         if (shareRecord == null) return null;
         ShareFileVO vo = new ShareFileVO();
         vo.setShareCode(shareRecord.getShareCode());
@@ -24,9 +24,9 @@ public class ShareConvertUtil {
         // filename, fileSize等建议用VO专用查询，不再从实体对象取
         return vo;
     }
-    public static ShareRecord toShareRecord(FileInfo file, User user, String shareCode, String password, LocalDateTime expireTime) {
+    public static ShareRecordEntity toShareRecord(FileInfoEntity file, UserEntity user, String shareCode, String password, LocalDateTime expireTime) {
         if (file == null && user == null && shareCode == null && password == null && expireTime == null) return null;
-        ShareRecord shareRecord = new ShareRecord();
+        ShareRecordEntity shareRecord = new ShareRecordEntity();
         if (file != null) {
             shareRecord.setFileId(file.getId());
             shareRecord.setUserId(file.getUserId());

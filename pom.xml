@@ -125,6 +125,12 @@
             <version>3.0.0</version>
         </dependency>
 
+        <!--MinIO OSS-->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.9</version>
+        </dependency>
         <!-- Redisson -->
         <dependency>
             <groupId>org.redisson</groupId>
@@ -145,11 +151,11 @@
         </dependency>
 
         <!-- MapStruct -->
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <version>1.5.5.Final</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.mapstruct</groupId>-->
+<!--            <artifactId>mapstruct</artifactId>-->
+<!--            <version>1.5.5.Final</version>-->
+<!--        </dependency>-->
 <!--        <dependency>-->
 <!--            <groupId>org.mapstruct</groupId>-->
 <!--            <artifactId>mapstruct-processor</artifactId>-->
@@ -161,6 +167,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
+        <!--hutool工具包-->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-core</artifactId>
+            <version>5.8.26</version>
         </dependency>
     </dependencies>
 

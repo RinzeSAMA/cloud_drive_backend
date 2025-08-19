@@ -1,14 +1,14 @@
 package com.cloudrive.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.cloudrive.model.entity.ShareRecord;
+import com.cloudrive.model.entity.ShareRecordEntity;
 import com.cloudrive.model.vo.ShareFileVO;
 import org.apache.ibatis.annotations.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface ShareRecordMapper extends BaseMapper<ShareRecord> {
+public interface ShareRecordMapper extends BaseMapper<ShareRecordEntity> {
 
 
     @Select("SELECT * FROM t_share_record WHERE share_code = #{shareCode}")
@@ -20,12 +20,12 @@ public interface ShareRecordMapper extends BaseMapper<ShareRecord> {
             @Result(column = "file_id", property = "file",
                     one = @One(select = "com.cloudrive.mapper.FileInfoMapper.selectById"))
     })
-    ShareRecord selectByShareCode(String shareCode);
+    ShareRecordEntity selectByShareCode(String shareCode);
 
-    List<ShareRecord> selectByUserIdOrderByCreateTimeDesc(Long userId);
+    List<ShareRecordEntity> selectByUserIdOrderByCreateTimeDesc(Long userId);
 
     @Select("SELECT * FROM t_share_record WHERE expire_time < #{now} AND is_expired = 0")
-    List<ShareRecord> selectExpiredButNotMarked(LocalDateTime now);
+    List<ShareRecordEntity> selectExpiredButNotMarked(LocalDateTime now);
 
     @Update("UPDATE t_share_record SET is_expired = 1 WHERE id = #{id}")
     int markExpired(Long id);

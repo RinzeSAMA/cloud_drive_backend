@@ -1,9 +1,7 @@
 package com.cloudrive.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cloudrive.mapper.ShareRecordMapper;
-import com.cloudrive.model.entity.ShareRecord;
+import com.cloudrive.model.entity.ShareRecordEntity;
 import com.cloudrive.model.vo.ShareFileVO;
 
 import java.time.LocalDateTime;
@@ -12,7 +10,7 @@ import java.util.List;
 /**
  * 文件分享服务接口
  */
-public interface ShareService extends IService<ShareRecord> {
+public interface ShareService extends IService<ShareRecordEntity> {
     /**
      * 创建分享链接
      */

@@ -4,13 +4,17 @@ import com.cloudrive.common.annotation.RateLimit;
 import com.cloudrive.common.annotation.RateLimit.Dimension;
 import com.cloudrive.common.result.Result;
 import com.cloudrive.common.util.UserContext;
+import com.cloudrive.model.common.FileUploadInfo;
 import com.cloudrive.model.dto.FileQueryDTO;
 import com.cloudrive.model.dto.FileRenameDTO;
 import com.cloudrive.model.vo.FileListVO;
 import com.cloudrive.model.vo.FileListPageVO;
+import com.cloudrive.model.vo.UploadUrlsVO;
 import com.cloudrive.service.FileService;
-import com.cloudrive.service.UploadProgressService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -18,12 +22,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 文件管理
@@ -31,28 +32,52 @@ import java.util.UUID;
 @RestController
 @Validated
 @RequestMapping("/api/files")
+@Slf4j
 public class FileController {
 
     private final FileService fileService;
-    private final UploadProgressService uploadProgressService;
 
     @Autowired
-    public FileController(FileService fileService, UploadProgressService uploadProgressService) {
+    public FileController(FileService fileService) {
         this.fileService = fileService;
-        this.uploadProgressService = uploadProgressService;
     }
 
     /**
-     * 上传文件
+     * 检查文件是否存在（判断是否进行断点续传）
      */
-    @PostMapping
-    @RateLimit(dimensions = { Dimension.USER, Dimension.IP }, permitsPerSecond = 3.0, timeout = 1000)
-    public Result<String> uploadFile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "parentId", required = false) Long parentId) {
-        String filePath = fileService.uploadFile(file, parentId);
-        return Result.success(filePath);
+    @GetMapping("/multipart/check/{md5}")
+    public Result<FileUploadInfo> checkFileByMd5(@PathVariable String md5) {
+        log.info("查询 <{}> 文件是否存在、是否进行断点续传", md5);
+        return fileService.checkFileByMd5(md5);
     }
+
+    /**
+     * 初始化文件分片地址及相关数据
+     */
+    @PostMapping("/multipart/init")
+    public Result<UploadUrlsVO> initMultiPartUpload(@RequestBody FileUploadInfo fileUploadInfo) {
+        log.info("通过 <{}> 初始化上传任务", fileUploadInfo);
+        return fileService.initMultipartUpload(fileUploadInfo);
+    }
+
+    /**
+     * 文件合并（单文件不会合并，仅信息入库）
+     */
+    @PostMapping("/multipart/merge/{md5}")
+    public Result<String> mergeMultipartUpload(@RequestParam String md5,@RequestParam Long parentId) {
+        log.info("通过 <{}> 合并上传任务", md5);
+        return fileService.mergeMultipartUpload(md5,parentId);
+    }
+
+    /**
+     * 下载文件（分片）
+     */
+    @GetMapping("/download/{id}")
+    public ResponseEntity<byte[]> downloadMultipartFile(@PathVariable Long id, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        log.info("通过 <{}> 开始分片下载", id);
+        return fileService.downloadMultipartFile(id, request, response);
+    }
+
 
     /**
      * 获取文件列表（分页）
@@ -113,68 +138,6 @@ public class FileController {
     public Result<Void> deleteFile(@RequestBody List<Long> fileIds ) {
         fileService.deleteFileToRecycleBin(fileIds);
         return Result.success();
-    }
-    
-    /**
-     * 上传文件并跟踪进度
-     * @param file 文件
-     * @param parentId 父文件夹ID
-     * @return 上传任务ID
-     */
-    @PostMapping("/progress")
-    public Result<String> uploadWithProgress(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "parentId", required = false) Long parentId) {
-        
-        try {
-            // 生成唯一任务ID
-            String taskId = UUID.randomUUID().toString();
-            
-            // 创建上传任务
-            uploadProgressService.createUploadTask(taskId, file.getOriginalFilename(), file.getSize());
-            
-            // 在主线程中获取当前用户ID
-            Long currentUserId = UserContext.getCurrentUserId();
-            
-            // 检查文件是否为空
-            if (file.isEmpty()) {
-                uploadProgressService.completeUploadTask(taskId, false, "文件为空");
-                return Result.error("文件为空");
-            }
-            
-            // 将文件保存到临时目录，以便在异步线程中使用
-            File tempDir = new File(System.getProperty("java.io.tmpdir"));
-            if (!tempDir.exists()) {
-                tempDir.mkdirs();
-            }
-            
-            // 创建临时文件
-            File tempFile = new File(tempDir, taskId + "_" + file.getOriginalFilename());
-            File parentDir = tempFile.getParentFile();
-            if (!parentDir.exists()) {
-                parentDir.mkdirs();
-            }
-            file.transferTo(tempFile);
-            
-            // 异步执行上传，避免阻塞请求
-            Thread uploadThread = new Thread(() -> {
-                try {
-                    fileService.uploadFileWithProgressFromPath(tempFile.getAbsolutePath(), file.getOriginalFilename(), file.getSize(), parentId, taskId, currentUserId);
-                }
-                finally {
-                    // 上传完成后删除临时文件
-                    if (tempFile.exists()) {
-                        tempFile.delete();
-                    }
-                }
-            });
-            uploadThread.setDaemon(true);
-            uploadThread.start();
-            
-            return Result.success(taskId);
-        } catch (Exception e) {
-            return Result.error("文件上传失败: " + e.getMessage());
-        }
     }
 
     /**

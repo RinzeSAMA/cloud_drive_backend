@@ -7,9 +7,9 @@ import com.cloudrive.common.util.UserContext;
 import com.cloudrive.convert.ShareConvertUtil;
 import com.cloudrive.mapper.FileInfoMapper;
 import com.cloudrive.mapper.ShareRecordMapper;
-import com.cloudrive.model.entity.FileInfo;
-import com.cloudrive.model.entity.ShareRecord;
-import com.cloudrive.model.entity.User;
+import com.cloudrive.model.entity.FileInfoEntity;
+import com.cloudrive.model.entity.ShareRecordEntity;
+import com.cloudrive.model.entity.UserEntity;
 import com.cloudrive.model.vo.ShareFileVO;
 import com.cloudrive.redis.ShareQueueRedis;
 import com.cloudrive.redis.ShareTokenRedis;
@@ -24,14 +24,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * 文件分享服务实现类
  */
 @Service
 @RequiredArgsConstructor
-public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord> implements ShareService {
+public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecordEntity> implements ShareService {
 
     private static final Logger logger = LoggerFactory.getLogger(ShareServiceImpl.class);
 
@@ -51,10 +50,10 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
     @Transactional
     public ShareFileVO createShare(Long fileId, LocalDateTime expireTime, String password) {
         // 获取当前登录用户
-        User currentUser = UserContext.getCurrentUser();
+        UserEntity currentUser = UserContext.getCurrentUser();
         
         // 获取文件信息
-        FileInfo file = fileInfoMapper.selectById(fileId);
+        FileInfoEntity file = fileInfoMapper.selectById(fileId);
         ExceptionUtil.throwIfNull(file, ErrorCode.FILE_NOT_FOUND);
         
         // 验证文件权限
@@ -66,7 +65,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
         String shareCode = generateShareCode();
         
         // 创建分享记录
-        ShareRecord shareRecord = ShareConvertUtil.toShareRecord(file, currentUser, shareCode, password, expireTime);
+        ShareRecordEntity shareRecord = ShareConvertUtil.toShareRecord(file, currentUser, shareCode, password, expireTime);
         save(shareRecord);
         
         // 添加到延时队列
@@ -81,7 +80,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
     @Transactional
     public ShareFileVO accessShare(String shareCode, String password) {
         // 获取分享记录
-        ShareRecord shareRecord = shareRecordMapper.selectByShareCode(shareCode);
+        ShareRecordEntity shareRecord = shareRecordMapper.selectByShareCode(shareCode);
         ExceptionUtil.throwIfNull(shareRecord, ErrorCode.FILE_NOT_FOUND);
         
         // 检查是否过期
@@ -99,7 +98,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
         }
         
         // 检查文件是否存在且未被删除
-        FileInfo fileInfo = shareRecord.getFile();
+        FileInfoEntity fileInfo = shareRecord.getFile();
         ExceptionUtil.throwIfNull(fileInfo, ErrorCode.FILE_NOT_FOUND);
         ExceptionUtil.throwIf(fileInfo.getIsDeleted() != 0, ErrorCode.FILE_NOT_FOUND);
         
@@ -112,7 +111,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
 
     @Override
     public boolean isShareExpired(String shareCode) {
-        ShareRecord shareRecord = shareRecordMapper.selectByShareCode(shareCode);
+        ShareRecordEntity shareRecord = shareRecordMapper.selectByShareCode(shareCode);
         ExceptionUtil.throwIfNull(shareRecord, ErrorCode.SHARE_NOT_FOUND);
         
         return shareRecord.getIsExpired() || shareRecord.getExpireTime().isBefore(LocalDateTime.now());
@@ -122,10 +121,10 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
     @Transactional
     public void markExpiredShares() {
         // 获取所有过期的分享记录
-        List<ShareRecord> expiredShares = shareRecordMapper.selectExpiredButNotMarked(LocalDateTime.now());
+        List<ShareRecordEntity> expiredShares = shareRecordMapper.selectExpiredButNotMarked(LocalDateTime.now());
         
         // 标记为过期
-        for (ShareRecord share : expiredShares) {
+        for (ShareRecordEntity share : expiredShares) {
             share.setIsExpired(true);
         }
         
@@ -152,7 +151,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
         Long userId = UserContext.getCurrentUserId();
         
         // 获取分享记录
-        ShareRecord shareRecord = shareRecordMapper.selectByShareCode(shareCode);
+        ShareRecordEntity shareRecord = shareRecordMapper.selectByShareCode(shareCode);
         ExceptionUtil.throwIfNull(shareRecord, ErrorCode.SHARE_NOT_FOUND);
         
         // 验证权限
@@ -173,7 +172,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
 
     @Override
     public String generateShareToken(String shareCode, String password) {
-        ShareRecord shareRecord = shareRecordMapper.selectByShareCode(shareCode);
+        ShareRecordEntity shareRecord = shareRecordMapper.selectByShareCode(shareCode);
         ExceptionUtil.throwIfNull(shareRecord, ErrorCode.SHARE_NOT_FOUND);
         
         // 验证密码
@@ -199,11 +198,11 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
             ErrorCode.INVALID_TOKEN
         );
 
-        ShareRecord shareRecord = shareRecordMapper.selectByShareCode(shareCode);
+        ShareRecordEntity shareRecord = shareRecordMapper.selectByShareCode(shareCode);
         ExceptionUtil.throwIfNull(shareRecord, ErrorCode.SHARE_NOT_FOUND);
                 
         // 检查文件是否存在且未被删除
-        FileInfo fileInfo = shareRecord.getFile();
+        FileInfoEntity fileInfo = shareRecord.getFile();
         ExceptionUtil.throwIfNull(fileInfo, ErrorCode.FILE_NOT_FOUND);
         ExceptionUtil.throwIf(fileInfo.getIsDeleted() != 0, ErrorCode.FILE_NOT_FOUND);
         
@@ -222,11 +221,11 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
         );
 
         // 获取分享记录
-        ShareRecord shareRecord = shareRecordMapper.selectByShareCode(shareCode);
+        ShareRecordEntity shareRecord = shareRecordMapper.selectByShareCode(shareCode);
         ExceptionUtil.throwIfNull(shareRecord, ErrorCode.SHARE_NOT_FOUND);
 
         // 获取文件信息
-        FileInfo fileInfo = shareRecord.getFile();
+        FileInfoEntity fileInfo = shareRecord.getFile();
         ExceptionUtil.throwIfNull(fileInfo, ErrorCode.FILE_NOT_FOUND);
         
         // 检查文件是否已被删除
@@ -235,7 +234,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
             ErrorCode.FILE_NOT_FOUND
         );
 
-        logger.debug("Downloading shared file: id={}, path={}", fileInfo.getId(), fileInfo.getPath());
+        logger.debug("Downloading shared file: id={}, url={}", fileInfo.getId(), fileInfo.getUrl());
         
         // 使用getFileContent获取文件内容
         byte[] content = fileService.getFileContent(fileInfo.getId());
@@ -246,10 +245,10 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
 
     @Override
     public String getFilename(String shareCode) {
-        ShareRecord shareRecord = shareRecordMapper.selectByShareCode(shareCode);
+        ShareRecordEntity shareRecord = shareRecordMapper.selectByShareCode(shareCode);
         ExceptionUtil.throwIfNull(shareRecord, ErrorCode.SHARE_NOT_FOUND);
 
-        FileInfo fileInfo = shareRecord.getFile();
+        FileInfoEntity fileInfo = shareRecord.getFile();
         ExceptionUtil.throwIfNull(fileInfo, ErrorCode.FILE_NOT_FOUND);
         
         // 检查文件是否已被删除

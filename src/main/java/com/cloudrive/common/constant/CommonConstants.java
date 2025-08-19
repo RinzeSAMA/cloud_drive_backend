@@ -10,6 +10,9 @@ public class CommonConstants {
      */
     public static class StatusCode {
         public static final int SUCCESS = 200;
+        public static final int UPLOADING = 210; // 表示文件正在分片上传中
+        public static final int UPLOAD_SUCCESS = 211; // 文件上传成功
+        public static final int NOT_UPLOAD = 212; // 文件未上传
         public static final int BAD_REQUEST = 400;
         public static final int UNAUTHORIZED = 401;
         public static final int FORBIDDEN = 403;
@@ -23,6 +26,7 @@ public class CommonConstants {
     public static class File {
         public static final String SLASH = "/";
         public static final String FILE_PATH_PREFIX = "USER_";
+        public static final Integer BUFFER_SIZE  = 1024 * 64; // 文件下载缓冲区大小64kb
     }
     
     /**

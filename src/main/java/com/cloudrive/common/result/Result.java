@@ -23,6 +23,10 @@ public class Result<T> {
         return new Result<>(CommonConstants.StatusCode.SUCCESS, "success", data);
     }
 
+    public static <T> Result<T> http(int httpCode,String msg ,T data) {
+        return new Result<>(httpCode,msg,data);
+    }
+
     public static <T> Result<T> error(String message) {
         return new Result<>(CommonConstants.StatusCode.SERVER_ERROR, message, null);
     }

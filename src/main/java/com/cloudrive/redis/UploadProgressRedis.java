@@ -1,7 +1,8 @@
 package com.cloudrive.redis;
 
 import com.cloudrive.common.constant.CommonConstants;
-import com.cloudrive.service.UploadProgressService.UploadTask;
+
+import com.cloudrive.model.common.UploadTask;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;

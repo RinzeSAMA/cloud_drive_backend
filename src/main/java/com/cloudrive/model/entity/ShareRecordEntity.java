@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Data
 @TableName("t_share_record")
-public class ShareRecord {
+public class ShareRecordEntity {
 
     /** 主键自增 */
     @TableId(value = "id", type = IdType.AUTO)
@@ -55,8 +55,8 @@ public class ShareRecord {
     /** 非数据库字段，需要时通过联表/二次查询填充） */
     // 仅做转换用，不存在于数据库中
     @TableField(exist = false)
-    private User user;
+    private UserEntity user;
     // 仅做转换用，不存在于数据库中
     @TableField(exist = false)
-    private FileInfo file;
+    private FileInfoEntity file;
 }

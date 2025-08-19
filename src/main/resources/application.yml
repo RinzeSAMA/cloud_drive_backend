@@ -32,8 +32,8 @@ spring:
   mail:
     host: smtp.qq.com
     port: 587
-    username: #你的邮箱
-    password: #你的授权码
+    username: 2053312368@qq.com
+    password: wvpfiwavjbwydbjb
     properties:
       mail:
         smtp:
@@ -48,6 +48,11 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
       enabled: true
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      datebase: 0
 
 # Redisson配置
 redisson:
@@ -96,12 +101,25 @@ sa-token:
   # 使用 Redis Jackson DAO 存储 Sa-Token 数据
   dao: redisJackson
 
+# 存储服务配置
+storage:
+  type: minio  # 当前使用的存储类型：aliyun 或 minio
+
 # OSS配置
+
+# MinIO配置
+minio:
+  endpoint: http://localhost:9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucket: clouddrive
+  expiry: 1 # redis 文件信息失效时间 天
+  breakpointTime: 1 # 分片地址失效时间 天
 
 # 分片上传配置
 app:
   chunk-upload:
-    temp-dir: ../temp/chunks
+    temp-dir: D:/Develop/Codes/cloud-drive/temp/chunks
     chunk-size: 2097152  # 2MB
     max-concurrent: 3
     retry-times: 3

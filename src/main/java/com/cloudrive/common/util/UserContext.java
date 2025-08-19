@@ -1,13 +1,9 @@
 package com.cloudrive.common.util;
 
 import cn.dev33.satoken.stp.StpUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cloudrive.common.enums.ErrorCode;
-import com.cloudrive.common.exception.BusinessException;
 import com.cloudrive.mapper.UserMapper;
-import com.cloudrive.model.entity.User;
-import lombok.RequiredArgsConstructor;
+import com.cloudrive.model.entity.UserEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -35,9 +31,9 @@ public class UserContext {
     /**
      * 获取当前登录用户的完整信息
      */
-    public static User getCurrentUser() {
+    public static UserEntity getCurrentUser() {
         Long userId = getCurrentUserId();
-        User user = userMapper.selectById(userId);
+        UserEntity user = userMapper.selectById(userId);
         ExceptionUtil.throwIfNull(user, ErrorCode.USER_NOT_FOUND);
         return user;
     }
