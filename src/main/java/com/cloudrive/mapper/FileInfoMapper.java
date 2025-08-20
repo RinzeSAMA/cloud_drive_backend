@@ -38,7 +38,7 @@ public interface FileInfoMapper extends BaseMapper<FileInfoEntity> {
         List<Integer> status = new ArrayList<>();
         Collections.addAll(status,0,1,2);
         return selectCount(Wrappers.<FileInfoEntity>lambdaQuery()
-                .eq(FileInfoEntity::getUrl, path)
+                .eq(FileInfoEntity::getObject,path)
                 .in(FileInfoEntity::getIsDeleted, status));
     }
 

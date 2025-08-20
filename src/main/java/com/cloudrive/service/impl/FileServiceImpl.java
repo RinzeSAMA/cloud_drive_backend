@@ -115,7 +115,7 @@ public class FileServiceImpl implements FileService {
             return Result.http(CommonConstants.StatusCode.UPLOADING,"文件上传中",fileUploadInfo);
         }
         log.info("redis中不存在md5: <{}> 查询mysql是否存在", md5);
-        FileInfoEntity file = fileInfoMapper.selectOne(new LambdaQueryWrapper<FileInfoEntity>().eq(FileInfoEntity::getMd5, md5));
+        FileInfoEntity file = fileInfoMapper.selectOne(new LambdaQueryWrapper<FileInfoEntity>().eq(FileInfoEntity::getMd5, md5).eq(FileInfoEntity::getIsDeleted,0));
         if (file != null) {
             log.info("mysql中存在md5: <{}> 的文件 该文件已上传至minio 秒传直接过", md5);
             FileUploadInfo dbFileInfo = BeanCopyUtils.copyBean(file, FileUploadInfo.class);

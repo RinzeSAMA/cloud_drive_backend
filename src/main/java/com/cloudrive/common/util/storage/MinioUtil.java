@@ -178,11 +178,8 @@ public class MinioUtil {
                             .bucket(minioConfigInfo.getBucket())
                             .object(object)
                             .build()
-            ).get();    // 阻塞等待
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();          // 恢复中断状态
-            throw new RuntimeException("删除被中断", e);
-        } catch (Exception e) {
+            );
+        }  catch (Exception e) {
             // 真实异常在 e.getCause()
             throw new RuntimeException("删除失败", e.getCause());
         }
