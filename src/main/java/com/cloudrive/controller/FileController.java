@@ -73,6 +73,7 @@ public class FileController {
      * 下载文件（分片）
      */
     @GetMapping("/download/{id}")
+    @RateLimit(dimensions = { Dimension.USER, Dimension.IP }, permitsPerSecond = 2.0, timeout = 1000)
     public ResponseEntity<byte[]> downloadMultipartFile(@PathVariable Long id, HttpServletRequest request, HttpServletResponse response) throws Exception {
         log.info("通过 <{}> 开始分片下载", id);
         return fileService.downloadMultipartFile(id, request, response);
@@ -98,26 +99,6 @@ public class FileController {
     public Result<List<FileListVO>> searchFiles(@RequestParam String keyword) {
         List<FileListVO> files = fileService.searchFiles(keyword);
         return Result.success(files);
-    }
-
-    /**
-     * 下载文件
-     */
-    @GetMapping("/{fileId}/content")
-    @RateLimit(dimensions = { Dimension.USER, Dimension.IP }, permitsPerSecond = 2.0, timeout = 1000)
-    public ResponseEntity<byte[]> downloadFile(@PathVariable Long fileId) {
-        byte[] content = fileService.downloadFile(fileId);
-        // 设置响应头
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDisposition(ContentDisposition.builder("attachment")
-                .filename(fileService.getFilename(fileId), StandardCharsets.UTF_8)
-                .build());
-        headers.setContentLength(content.length);
-        
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(content);
     }
 
     /**

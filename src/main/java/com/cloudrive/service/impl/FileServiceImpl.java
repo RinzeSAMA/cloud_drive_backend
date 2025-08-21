@@ -420,11 +420,6 @@ public class FileServiceImpl implements FileService {
         return fileInfos.stream().map(FileConvertUtil::toFileListVO).collect(Collectors.toList());
     }
 
-    @Override
-    public String getFilename(Long fileId) {
-        return getAndValidateFile(fileId, UserContext.getCurrentUser()).getFilename();
-    }
-
     //TODO
     @Override
     public byte[] getFileContent(Long fileId) {
@@ -461,14 +456,6 @@ public class FileServiceImpl implements FileService {
         return folder.getId();
     }
 
-    // TODO
-    @Override
-    public byte[] downloadFile(Long fileId) {
-//        UserEntity currentUser = UserContext.getCurrentUser();
-//        FileInfoEntity fileInfo = getAndValidateFile(fileId, currentUser);
-//        return retrieveFileContent(fileInfo);
-        return  null;
-    }
 
     /* ---------------- 私有工具 ---------------- */
     private FileInfoEntity getAndValidateFile(Long fileId, UserEntity currentUser) {
@@ -478,22 +465,6 @@ public class FileServiceImpl implements FileService {
         ExceptionUtil.throwIf(fileInfo.getIsDeleted() != 0, ErrorCode.FILE_NOT_FOUND);
 
         return fileInfo;
-    }
-
-    private void validateFolderIsEmpty(Long folderId) {
-        long childCount = fileInfoMapper.selectCount(
-                Wrappers.<FileInfoEntity>lambdaQuery()
-                        .eq(FileInfoEntity::getParentId, folderId)
-                        .eq(FileInfoEntity::getIsDeleted, false)
-        );
-        ExceptionUtil.throwIf(childCount > 0, ErrorCode.FOLDER_NOT_EMPTY);
-    }
-
-    // TODO
-    private byte[] retrieveFileContent(FileInfoEntity fileInfo) {
-//        ExceptionUtil.throwIf(fileInfo.getIsFolder(), ErrorCode.CANNOT_DOWNLOAD_FOLDER);
-//        return storageStrategy.downloadFile(fileInfo.getPath());
-        return null;
     }
 
     /**递归查找指定文件夹下所有子文件夹 */

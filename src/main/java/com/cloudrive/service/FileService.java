@@ -20,11 +20,6 @@ import java.util.List;
 public interface FileService {
 
     /**
-     * 下载文件
-     */
-    byte[] downloadFile(Long fileId);
-
-    /**
      * 分页查询文件列表
      *
      */
@@ -48,11 +43,6 @@ public interface FileService {
      * 搜索文件
      */
     List<FileListVO> searchFiles(String keyword);
-
-    /**
-     * 获取文件名
-     */
-    String getFilename(Long fileId);
 
     /**
      * 获取文件内容
