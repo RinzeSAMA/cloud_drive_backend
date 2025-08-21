@@ -25,7 +25,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
                         // 分享相关
                         "/api/shares/*", // 此接口用于访问分享链接
                         "/api/shares/*/verification",// 此接口用于校验临时token
-                        "/api/shares/*/content"// 此接口用于下载对应文件
+                        "/api/shares/*/preDownload"// 此接口用于下载对应文件
                     )
                     .check(r -> StpUtil.checkLogin());
         })).addPathPatterns("/**");

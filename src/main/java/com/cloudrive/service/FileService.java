@@ -66,4 +66,6 @@ public interface FileService {
     Result<String> mergeMultipartUpload(String md5,Long parentId);
 
     ResponseEntity<byte[]> downloadMultipartFile(Long id, HttpServletRequest request, HttpServletResponse response) throws IOException;
+
+    String downloadByPreUrl(Long id);
 }

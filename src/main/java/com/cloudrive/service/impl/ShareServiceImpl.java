@@ -232,7 +232,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
     }
 
     @Override
-    public byte[] downloadSharedFile(String shareCode, String token) {
+    public String downloadSharedFile(String shareCode, String token) {
         // 验证token
         ExceptionUtil.throwIf(
             !validateShareToken(shareCode, token),
@@ -255,11 +255,9 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
 
         logger.debug("Downloading shared file: id={}, url={}", fileInfo.getId(), fileInfo.getUrl());
         
-        // 使用getFileContent获取文件内容
-        byte[] content = fileService.getFileContent(fileInfo.getId());
-        logger.debug("File content size: {} bytes", content.length);
-        
-        return content;
+        // 获取文件直链，返回让前端下载即可
+        String url = fileService.downloadByPreUrl(fileInfo.getId());
+        return url;
     }
 
     @Override

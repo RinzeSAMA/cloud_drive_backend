@@ -79,6 +79,15 @@ public class FileController {
         return fileService.downloadMultipartFile(id, request, response);
     }
 
+    /**
+     * 通过直链形式下载，此方案为：返回前端具体文件（文件夹则为打包后的zip）的预签名链接，前端直接与minio对接下载
+     */
+    @GetMapping("/preDownload/{id}")
+     public Result<String> downloadByPreUrl(@PathVariable Long id){
+        log.info("开始直链下载");
+        String url = fileService.downloadByPreUrl(id);
+        return Result.success(url);
+    }
 
     /**
      * 获取文件列表（分页）

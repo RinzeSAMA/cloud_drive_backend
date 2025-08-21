@@ -294,6 +294,24 @@ public class FileServiceImpl implements FileService {
         return null;
     }
 
+    /**
+     * 直链形式下载
+     */
+    @Override
+    public String downloadByPreUrl(Long id) {
+        // 分为单文件下载和文件夹下载两种方案
+        FileInfoEntity files = fileInfoMapper.selectById(id);
+
+        // 单文件下载，直接拿直链返回即可，
+        if(!files.getIsFolder()){
+            String url = minioUtil.downloadByPreUrl(files.getObject(),files.getFilename());
+            return url;
+        }
+
+        //TODO 如果是文件夹，需要打包再下载
+        return null;
+    }
+
 
     /**
      * 逻辑删除（到回收站）
@@ -420,7 +438,7 @@ public class FileServiceImpl implements FileService {
         return fileInfos.stream().map(FileConvertUtil::toFileListVO).collect(Collectors.toList());
     }
 
-    //TODO
+    //获取文件流
     @Override
     public byte[] getFileContent(Long fileId) {
 //        FileInfoEntity fileInfo = getAndValidateFile(fileId, UserContext.getCurrentUser());

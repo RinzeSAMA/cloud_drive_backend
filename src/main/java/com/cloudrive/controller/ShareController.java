@@ -138,27 +138,22 @@ public class ShareController {
     /**
      * 下载分享文件
      */
-    @GetMapping("/{shareCode}/content")
+    @GetMapping("/{shareCode}/preDownload")
     @RateLimit(dimensions = { Dimension.IP }, permitsPerSecond = 2.0, timeout = 1000)
-    public ResponseEntity<byte[]> downloadSharedFile(
+    public ResponseEntity<String> downloadSharedFile(
             @PathVariable String shareCode) {
         // 从Cookie中获取令牌
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
                 .getRequest();
         String token = extractShareTokenFromCookies(shareCode, request);
 
-        // 获取文件内容
-        byte[] fileContent = shareService.downloadSharedFile(shareCode, token);
-        
-        // 设置响应头
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", shareService.getFilename(shareCode));
-        headers.setContentLength(fileContent.length);
+        // 获取文件对应直链，返回前端让其直接对接Oss下载
+        String preSignUrl = shareService.downloadSharedFile(shareCode, token);
 
         return ResponseEntity.ok()
-                .headers(headers)
-                .body(fileContent);
+                .header("Cache-Control", "no-store")
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(preSignUrl);
     }
 
     private String extractShareTokenFromCookies(String shareCode, HttpServletRequest request) {
