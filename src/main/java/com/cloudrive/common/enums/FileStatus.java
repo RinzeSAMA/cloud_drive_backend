@@ -20,10 +20,4 @@ public enum FileStatus {
     public Integer getCode() { return code; }
     public String getDesc() { return desc; }
 
-    public static FileStatus fromCode(Integer code) {
-        for (FileStatus status : values()) {
-            if (status.code == code) return status;
-        }
-        return NORMAL;
-    }
 }
