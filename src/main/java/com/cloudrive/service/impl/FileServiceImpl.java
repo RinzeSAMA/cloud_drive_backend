@@ -115,7 +115,7 @@ public class FileServiceImpl implements FileService {
             return Result.http(CommonConstants.StatusCode.UPLOADING,"文件上传中",fileUploadInfo);
         }
         log.info("redis中不存在md5: <{}> 查询mysql是否存在", md5);
-        FileInfoEntity file = fileInfoMapper.selectOne(new LambdaQueryWrapper<FileInfoEntity>().eq(FileInfoEntity::getMd5, md5));
+        FileInfoEntity file = fileInfoMapper.selectOne(new LambdaQueryWrapper<FileInfoEntity>().eq(FileInfoEntity::getMd5, md5).eq(FileInfoEntity::getIsDeleted,0));
         if (file != null) {
             log.info("mysql中存在md5: <{}> 的文件 该文件已上传至minio 秒传直接过", md5);
             FileUploadInfo dbFileInfo = BeanCopyUtils.copyBean(file, FileUploadInfo.class);
@@ -294,6 +294,24 @@ public class FileServiceImpl implements FileService {
         return null;
     }
 
+    /**
+     * 直链形式下载
+     */
+    @Override
+    public String downloadByPreUrl(Long id) {
+        // 分为单文件下载和文件夹下载两种方案
+        FileInfoEntity files = fileInfoMapper.selectById(id);
+
+        // 单文件下载，直接拿直链返回即可，
+        if(!files.getIsFolder()){
+            String url = minioUtil.downloadByPreUrl(files.getObject(),files.getFilename());
+            return url;
+        }
+
+        //TODO 如果是文件夹，需要打包再下载
+        return null;
+    }
+
 
     /**
      * 逻辑删除（到回收站）
@@ -420,12 +438,7 @@ public class FileServiceImpl implements FileService {
         return fileInfos.stream().map(FileConvertUtil::toFileListVO).collect(Collectors.toList());
     }
 
-    @Override
-    public String getFilename(Long fileId) {
-        return getAndValidateFile(fileId, UserContext.getCurrentUser()).getFilename();
-    }
-
-    //TODO
+    //获取文件流
     @Override
     public byte[] getFileContent(Long fileId) {
 //        FileInfoEntity fileInfo = getAndValidateFile(fileId, UserContext.getCurrentUser());
@@ -461,14 +474,6 @@ public class FileServiceImpl implements FileService {
         return folder.getId();
     }
 
-    // TODO
-    @Override
-    public byte[] downloadFile(Long fileId) {
-//        UserEntity currentUser = UserContext.getCurrentUser();
-//        FileInfoEntity fileInfo = getAndValidateFile(fileId, currentUser);
-//        return retrieveFileContent(fileInfo);
-        return  null;
-    }
 
     /* ---------------- 私有工具 ---------------- */
     private FileInfoEntity getAndValidateFile(Long fileId, UserEntity currentUser) {
@@ -478,22 +483,6 @@ public class FileServiceImpl implements FileService {
         ExceptionUtil.throwIf(fileInfo.getIsDeleted() != 0, ErrorCode.FILE_NOT_FOUND);
 
         return fileInfo;
-    }
-
-    private void validateFolderIsEmpty(Long folderId) {
-        long childCount = fileInfoMapper.selectCount(
-                Wrappers.<FileInfoEntity>lambdaQuery()
-                        .eq(FileInfoEntity::getParentId, folderId)
-                        .eq(FileInfoEntity::getIsDeleted, false)
-        );
-        ExceptionUtil.throwIf(childCount > 0, ErrorCode.FOLDER_NOT_EMPTY);
-    }
-
-    // TODO
-    private byte[] retrieveFileContent(FileInfoEntity fileInfo) {
-//        ExceptionUtil.throwIf(fileInfo.getIsFolder(), ErrorCode.CANNOT_DOWNLOAD_FOLDER);
-//        return storageStrategy.downloadFile(fileInfo.getPath());
-        return null;
     }
 
     /**递归查找指定文件夹下所有子文件夹 */

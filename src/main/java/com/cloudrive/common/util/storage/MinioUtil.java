@@ -4,6 +4,7 @@ import cn.hutool.core.util.IdUtil;
 import co.elastic.clients.elasticsearch.core.DeleteResponse;
 import com.cloudrive.common.enums.ErrorCode;
 import com.cloudrive.common.exception.BusinessException;
+import com.cloudrive.common.result.Result;
 import com.cloudrive.config.minio.CustomMinioClient;
 import com.cloudrive.config.minio.MinioConfigInfo;
 import com.cloudrive.model.common.FileUploadInfo;
@@ -11,6 +12,7 @@ import com.cloudrive.model.vo.UploadUrlsVO;
 import com.google.common.collect.HashMultimap;
 
 import io.minio.*;
+import io.minio.errors.*;
 import io.minio.http.Method;
 import io.minio.messages.Part;
 import jakarta.annotation.PostConstruct;
@@ -20,6 +22,11 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -178,11 +185,8 @@ public class MinioUtil {
                             .bucket(minioConfigInfo.getBucket())
                             .object(object)
                             .build()
-            ).get();    // 阻塞等待
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();          // 恢复中断状态
-            throw new RuntimeException("删除被中断", e);
-        } catch (Exception e) {
+            );
+        }  catch (Exception e) {
             // 真实异常在 e.getCause()
             throw new RuntimeException("删除失败", e.getCause());
         }
@@ -233,4 +237,31 @@ public class MinioUtil {
         return parts;
     }
 
+    /**
+     * 获取文件直链以进行下载
+     */
+    public String downloadByPreUrl(String object,String filename) {
+        String encoded = URLEncoder.encode(filename, StandardCharsets.UTF_8)
+                .replaceAll("\\+", "%20"); // 空格用%20，避免+被误解
+        String contentDisposition = "attachment; filename=\"" + filename.replace("\"","\\\"") + "\"; filename*=UTF-8''" + encoded;
+
+        Map<String, String> qp = new HashMap<>();
+        qp.put("response-content-disposition", contentDisposition);
+        qp.put("response-content-type", "application/octet-stream");
+        try {
+            String presignedObjectUrl = customMinioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
+                    .method(Method.GET)
+                    .bucket(minioConfigInfo.getBucket())
+                    .object(object)
+                    .expiry(minioConfigInfo.getExpiry(), TimeUnit.HOURS)
+                    .extraQueryParams(qp)
+                    .build());
+            log.info("获取直链成功：{}", presignedObjectUrl);
+            return presignedObjectUrl;
+        } catch (Exception e) {
+            log.error("获取直链失败: {}", e.getMessage());
+            // 返回 获取文件直链失败
+            throw new BusinessException(ErrorCode.OSS_DOWNLOAD_FAILED);
+        }
+    }
 }

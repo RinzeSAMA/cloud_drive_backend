@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("t_share_record")
+@TableName("share_record")
 public class ShareRecordEntity {
 
     /** 主键自增 */
@@ -52,11 +52,12 @@ public class ShareRecordEntity {
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
-    /** 非数据库字段，需要时通过联表/二次查询填充） */
-    // 仅做转换用，不存在于数据库中
-    @TableField(exist = false)
-    private UserEntity user;
-    // 仅做转换用，不存在于数据库中
-    @TableField(exist = false)
-    private FileInfoEntity file;
+
+//    /** 非数据库字段，需要时通过联表/二次查询填充） */
+//    // 仅做转换用，不存在于数据库中
+//    @TableField(exist = false)
+//    private UserEntity user;
+//    // 仅做转换用，不存在于数据库中
+//    @TableField(exist = false)
+//    private FileInfoEntity file;
 }

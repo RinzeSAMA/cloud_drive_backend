@@ -20,11 +20,6 @@ import java.util.List;
 public interface FileService {
 
     /**
-     * 下载文件
-     */
-    byte[] downloadFile(Long fileId);
-
-    /**
      * 分页查询文件列表
      *
      */
@@ -50,11 +45,6 @@ public interface FileService {
     List<FileListVO> searchFiles(String keyword);
 
     /**
-     * 获取文件名
-     */
-    String getFilename(Long fileId);
-
-    /**
      * 获取文件内容
      * @param fileId 文件ID
      * @return 文件内容字节数组
@@ -76,4 +66,6 @@ public interface FileService {
     Result<String> mergeMultipartUpload(String md5,Long parentId);
 
     ResponseEntity<byte[]> downloadMultipartFile(Long id, HttpServletRequest request, HttpServletResponse response) throws IOException;
+
+    String downloadByPreUrl(Long id);
 }

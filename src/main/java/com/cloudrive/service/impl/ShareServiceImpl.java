@@ -18,6 +18,7 @@ import com.cloudrive.service.ShareService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,7 +74,13 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
         
         // 返回分享信息
 
-        return ShareConvertUtil.toShareFileVO(shareRecord);
+        // 设置文件相关的
+        ShareFileVO shareFileVO = new ShareFileVO();
+        BeanUtils.copyProperties(shareRecord, shareFileVO);
+        shareFileVO.setFilename(file.getFilename());
+        shareFileVO.setFileSize(file.getSize());
+        // 返回分享信息
+        return shareFileVO;
     }
 
     @Override
@@ -98,15 +105,19 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
         }
         
         // 检查文件是否存在且未被删除
-        FileInfoEntity fileInfo = shareRecord.getFile();
+        FileInfoEntity fileInfo = fileInfoMapper.selectById(shareRecord.getFileId());
         ExceptionUtil.throwIfNull(fileInfo, ErrorCode.FILE_NOT_FOUND);
         ExceptionUtil.throwIf(fileInfo.getIsDeleted() != 0, ErrorCode.FILE_NOT_FOUND);
         
         // 更新访问次数
         shareRecordMapper.incrementVisitCount(shareRecord.getId());
-        
+
+        ShareFileVO shareFileVO = new ShareFileVO();
+        BeanUtils.copyProperties(shareRecord, shareFileVO);
+        shareFileVO.setFilename(fileInfo.getFilename());
+        shareFileVO.setFileSize(fileInfo.getSize());
         // 返回分享信息
-        return ShareConvertUtil.toShareFileVO(shareRecord);
+        return shareFileVO;
     }
 
     @Override
@@ -136,7 +147,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
     public List<ShareFileVO> getSharedFiles() {
         // 获取当前用户ID
         Long userId = UserContext.getCurrentUserId();
-        
+
         // 获取用户的所有分享记录
         List<ShareFileVO> shareFileVOS = shareRecordMapper.selectShareFileVOsByUserId(userId);
 
@@ -156,7 +167,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
         
         // 验证权限
         ExceptionUtil.throwIf(
-            !shareRecord.getUser().getId().equals(userId),
+            !shareRecord.getUserId().equals(userId),
             ErrorCode.NO_CANCEL_PERMISSION
         );
         
@@ -202,18 +213,24 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
         ExceptionUtil.throwIfNull(shareRecord, ErrorCode.SHARE_NOT_FOUND);
                 
         // 检查文件是否存在且未被删除
-        FileInfoEntity fileInfo = shareRecord.getFile();
+        FileInfoEntity fileInfo = fileInfoMapper.selectById(shareRecord.getFileId());
         ExceptionUtil.throwIfNull(fileInfo, ErrorCode.FILE_NOT_FOUND);
         ExceptionUtil.throwIf(fileInfo.getIsDeleted() != 0, ErrorCode.FILE_NOT_FOUND);
         
         shareRecord.setVisitCount(shareRecord.getVisitCount() + 1);
-        shareRecordMapper.insert(shareRecord);
-        
-        return ShareConvertUtil.toShareFileVO(shareRecord);
+        shareRecordMapper.updateById(shareRecord);
+
+        // 设置文件相关的
+        ShareFileVO shareFileVO = new ShareFileVO();
+        BeanUtils.copyProperties(shareRecord, shareFileVO);
+        shareFileVO.setFilename(fileInfo.getFilename());
+        shareFileVO.setFileSize(fileInfo.getSize());
+        // 返回分享信息
+        return shareFileVO;
     }
 
     @Override
-    public byte[] downloadSharedFile(String shareCode, String token) {
+    public String downloadSharedFile(String shareCode, String token) {
         // 验证token
         ExceptionUtil.throwIf(
             !validateShareToken(shareCode, token),
@@ -225,7 +242,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
         ExceptionUtil.throwIfNull(shareRecord, ErrorCode.SHARE_NOT_FOUND);
 
         // 获取文件信息
-        FileInfoEntity fileInfo = shareRecord.getFile();
+        FileInfoEntity fileInfo = fileInfoMapper.selectById(shareRecord.getFileId());
         ExceptionUtil.throwIfNull(fileInfo, ErrorCode.FILE_NOT_FOUND);
         
         // 检查文件是否已被删除
@@ -236,11 +253,9 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
 
         logger.debug("Downloading shared file: id={}, url={}", fileInfo.getId(), fileInfo.getUrl());
         
-        // 使用getFileContent获取文件内容
-        byte[] content = fileService.getFileContent(fileInfo.getId());
-        logger.debug("File content size: {} bytes", content.length);
-        
-        return content;
+        // 获取文件直链，返回让前端下载即可
+        String url = fileService.downloadByPreUrl(fileInfo.getId());
+        return url;
     }
 
     @Override
@@ -248,7 +263,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareRecordMapper, ShareRecord
         ShareRecordEntity shareRecord = shareRecordMapper.selectByShareCode(shareCode);
         ExceptionUtil.throwIfNull(shareRecord, ErrorCode.SHARE_NOT_FOUND);
 
-        FileInfoEntity fileInfo = shareRecord.getFile();
+        FileInfoEntity fileInfo = fileInfoMapper.selectById(shareRecord.getFileId());
         ExceptionUtil.throwIfNull(fileInfo, ErrorCode.FILE_NOT_FOUND);
         
         // 检查文件是否已被删除

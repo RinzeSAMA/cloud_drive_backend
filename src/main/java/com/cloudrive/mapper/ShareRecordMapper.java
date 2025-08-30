@@ -12,14 +12,6 @@ public interface ShareRecordMapper extends BaseMapper<ShareRecordEntity> {
 
 
     @Select("SELECT * FROM t_share_record WHERE share_code = #{shareCode}")
-    @Results({
-            @Result(column = "user_id", property = "userId"),
-            @Result(column = "file_id", property = "fileId"),
-            @Result(column = "user_id", property = "user",
-                    one = @One(select = "com.cloudrive.mapper.UserMapper.selectById")),
-            @Result(column = "file_id", property = "file",
-                    one = @One(select = "com.cloudrive.mapper.FileInfoMapper.selectById"))
-    })
     ShareRecordEntity selectByShareCode(String shareCode);
 
     List<ShareRecordEntity> selectByUserIdOrderByCreateTimeDesc(Long userId);

@@ -3,6 +3,7 @@ package com.cloudrive.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cloudrive.model.entity.ShareRecordEntity;
 import com.cloudrive.model.vo.ShareFileVO;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -61,9 +62,9 @@ public interface ShareService extends IService<ShareRecordEntity> {
      * 下载分享文件
      * @param shareCode 分享码
      * @param token 访问令牌
-     * @return 文件内容
+     * @return 文件直链
      */
-    byte[] downloadSharedFile(String shareCode, String token);
+    String downloadSharedFile(String shareCode, String token);
 
     /**
      * 获取分享文件的文件名

@@ -21,6 +21,7 @@ spring:
       connection-timeout: 30000
       maximum-pool-size: 10
       minimum-idle: 5
+      max-lifetime: 60000
   
   mybatis-plus:
   mapper-locations: classpath:/mapper/**/*Mapper.xml
@@ -32,8 +33,8 @@ spring:
   mail:
     host: smtp.qq.com
     port: 587
-    username: 2053312368@qq.com
-    password: wvpfiwavjbwydbjb
+    username: #你的邮箱
+    password: #你的授权码
     properties:
       mail:
         smtp:
