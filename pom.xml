@@ -175,6 +175,20 @@
             <artifactId>hutool-core</artifactId>
             <version>5.8.26</version>
         </dependency>
+
+        <!--canal-->
+        <dependency>
+            <groupId>com.alibaba.otter</groupId>
+            <artifactId>canal.client</artifactId>
+            <version>1.1.5</version>
+        </dependency>
+
+        <!-- Message、CanalEntry.Entry等来自此安装包 -->
+        <dependency>
+            <groupId>com.alibaba.otter</groupId>
+            <artifactId>canal.protocol</artifactId>
+            <version>1.1.5</version>
+        </dependency>
     </dependencies>
 
     <build>
