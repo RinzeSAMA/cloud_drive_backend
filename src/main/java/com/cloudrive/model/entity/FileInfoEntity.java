@@ -11,7 +11,7 @@ import lombok.experimental.Accessors;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("t_file_info")
+@TableName("file_info")
 @Accessors(chain = true)
 public class FileInfoEntity {
 

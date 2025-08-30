@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("t_share_record")
+@TableName("share_record")
 public class ShareRecordEntity {
 
     /** 主键自增 */
